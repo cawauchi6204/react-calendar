@@ -7,12 +7,14 @@ const Calendar = () => {
   const week = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "STU"]
   const [calendar, setCalendar] = useState<number[][]>([])
   const [date, setDate] = useState(new Date())
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
   useEffect(() => {
     showCalendar(date)
   }, [date])
 
   // 前の月表示
-  const display_prev_month = (_date: Date) => {
+  const displayPrevMonth = (_date: Date) => {
     const prev_month_num = _date.getMonth() - 1
     const prev_month_date = _date.setMonth(prev_month_num)
     const prev_date = new Date(prev_month_date)
@@ -20,13 +22,13 @@ const Calendar = () => {
   }
 
   // 当月表示
-  const display_this_month = () => {
+  const displayThisMonth = () => {
     const this_month = new Date()
     setDate(this_month)
   }
 
   // 次の月表示
-  const display_next_month = (_date: Date) => {
+  const displayNextMonth = (_date: Date) => {
     const next_month_num = _date.getMonth() + 1
     const next_month_date = _date.setMonth(next_month_num)
     const next_date = new Date(next_month_date)
@@ -76,13 +78,14 @@ const Calendar = () => {
   }
   return (
     <>
-      <button onClick={() => { display_prev_month(date) }}>
+      <p>{year}年{month}月</p>
+      <button onClick={() => { displayPrevMonth(date) }}>
         前月表示
       </button>
-      <button onClick={() => { display_this_month() }}>
+      <button onClick={() => { displayThisMonth() }}>
         当月表示
       </button>
-      <button onClick={() => { display_next_month(date) }}>
+      <button onClick={() => { displayNextMonth(date) }}>
         次月表示
       </button>
       <table>
