@@ -6,21 +6,32 @@ import {
 const Calendar = () => {
   const week = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "STU"]
   const [calendar, setCalendar] = useState<number[][]>([])
+  const [date, setDate] = useState(new Date())
   useEffect(() => {
-    const date = new Date()
     showCalendar(date)
-  }, [])
-  // // 前の月表示
-  // const prev_month = () => {
-  //   showDate.setMonth(showDate.getMonth() - 1);
-  //   showProcess(showDate);
-  // }
+  }, [date])
 
-  // // // 次の月表示
-  // const next_month = () => {
-  //   showDate.setMonth(showDate.getMonth() + 1);
-  //   showProcess(showDate);
-  // }
+  // 前の月表示
+  const display_prev_month = (_date: Date) => {
+    const prev_month_num = _date.getMonth() - 1
+    const prev_month_date = _date.setMonth(prev_month_num)
+    const prev_date = new Date(prev_month_date)
+    setDate(prev_date)
+  }
+
+  // 当月表示
+  const display_this_month = () => {
+    const this_month = new Date()
+    setDate(this_month)
+  }
+
+  // 次の月表示
+  const display_next_month = (_date: Date) => {
+    const next_month_num = _date.getMonth() + 1
+    const next_month_date = _date.setMonth(next_month_num)
+    const next_date = new Date(next_month_date)
+    setDate(next_date)
+  }
 
   // カレンダー表示
   const showCalendar = (_date: Date) => {
@@ -33,12 +44,12 @@ const Calendar = () => {
 
   // カレンダー作成関数
   const createCalendar = (_year: number, _month: number) => {
-    let calendar_array: number[][] = []
+    const calendar_array: number[][] = []
     let count = 0
-    let start_day_of_week = new Date(_year, _month, 1).getDay()
-    let end_date = new Date(_year, _month + 1, 0).getDate()
-    let last_month_end_date = new Date(_year, _month, 0).getDate()
-    let row = Math.ceil((start_day_of_week + end_date) / week.length)
+    const start_day_of_week = new Date(_year, _month, 1).getDay()
+    const end_date = new Date(_year, _month + 1, 0).getDate()
+    const last_month_end_date = new Date(_year, _month, 0).getDate()
+    const row = Math.ceil((start_day_of_week + end_date) / week.length)
 
     // 1行ずつ設定
     for (let i = 0; i < row; i++) {
@@ -64,36 +75,47 @@ const Calendar = () => {
     return calendar_array
   }
   return (
-    <table>
-      <thead>
-        <tr>
+    <>
+      <button onClick={() => { display_prev_month(date) }}>
+        前月表示
+      </button>
+      <button onClick={() => { display_this_month() }}>
+        当月表示
+      </button>
+      <button onClick={() => { display_next_month(date) }}>
+        次月表示
+      </button>
+      <table>
+        <thead>
+          <tr>
+            {
+              week.map(_day => {
+                return (
+                  <th>
+                    {_day}
+                  </th>
+                )
+              })
+            }
+          </tr>
+        </thead>
+        <tbody>
           {
-            week.map(_day => {
-              return (
-                <th>
-                  {_day}
-                </th>
-              )
-            })
+            calendar.map((week_row: number[], row_num: number) => (
+              <tr key={row_num}>
+                {
+                  week_row.map(_date => (
+                    <td>
+                      {_date}
+                    </td>
+                  ))
+                }
+              </tr>
+            ))
           }
-        </tr>
-      </thead>
-      <tbody>
-        {
-          calendar.map((week_row: number[], row_num: number) => (
-            <tr key={row_num}>
-              {
-                week_row.map(_date => (
-                  <td>
-                    {_date}
-                  </td>
-                ))
-              }
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </>
   )
 }
 export default Calendar
