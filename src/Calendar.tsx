@@ -2,10 +2,39 @@ import {
   useEffect,
   useState
 } from 'react'
+import Button from '@material-ui/core/Button'
+import Box from '@material-ui/core/Box'
+import Table from '@material-ui/core/Table'
+import TableContainer from '@material-ui/core/TableContainer'
+import TableHead from '@material-ui/core/TableHead'
+import TableBody from '@material-ui/core/TableBody'
+import TableRow from '@material-ui/core/TableRow'
+import TableCell from '@material-ui/core/TableCell'
+
+type Plan = {
+  day: number,
+  plans?: [
+    {
+      plan_title: string,
+      plan_date: Date,
+      plan_color: string
+    }
+  ]
+}
+
+const Square = (_props: any) => {
+  const children = _props.children
+  return (
+    <Box>
+      {children}
+    </Box>
+  )
+}
 
 const Calendar = () => {
   const week = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "STU"]
-  const [calendar, setCalendar] = useState<number[][]>([])
+  const [calendar, setCalendar] = useState<Plan[][]>([])
+  console.log(JSON.stringify(calendar))
   const [date, setDate] = useState(new Date())
   const year = date.getFullYear()
   const month = date.getMonth() + 1
@@ -46,7 +75,7 @@ const Calendar = () => {
 
   // カレンダー作成関数
   const createCalendar = (_year: number, _month: number) => {
-    const calendar_array: number[][] = []
+    const calendar_array: Plan[][] = []
     let count = 0
     const start_day_of_week = new Date(_year, _month, 1).getDay()
     const end_date = new Date(_year, _month + 1, 0).getDate()
@@ -56,20 +85,52 @@ const Calendar = () => {
     // 1行ずつ設定
     for (let i = 0; i < row; i++) {
       // 1colum単位で設定
-      const column_array: number[] = []
+      const column_array: Plan[] = []
       for (let j = 0; j < week.length; j++) {
         if (i === 0 && j < start_day_of_week) {
           // 1行目で1日まで先月の日付を設定
           const day = last_month_end_date - start_day_of_week + j + 1
-          column_array.push(day)
+          const today_plan: Plan = {
+            day,
+            plans: [
+              {
+                plan_title: 'どっかいく',
+                plan_date: date,
+                plan_color: 'red'
+              }
+            ]
+          }
+          column_array.push(today_plan)
         } else if (count >= end_date) {
           // 最終行で最終日以降、翌月の日付を設定
           count++
-          column_array.push(count - end_date)
+          const day = count - end_date
+          const today_plan: Plan = {
+            day,
+            plans: [
+              {
+                plan_title: 'どっかいく',
+                plan_date: date,
+                plan_color: 'red'
+              }
+            ]
+          }
+          column_array.push(today_plan)
         } else {
           // 当月の日付を曜日に照らし合わせて設定
           count++
-          column_array.push(count)
+          const day = count
+          const today_plan: Plan = {
+            day,
+            plans: [
+              {
+                plan_title: 'どっかいく',
+                plan_date: date,
+                plan_color: 'red'
+              }
+            ]
+          }
+          column_array.push(today_plan)
         }
       }
       calendar_array.push(column_array)
@@ -78,46 +139,61 @@ const Calendar = () => {
   }
   return (
     <>
+      <Square />
       <p>{year}年{month}月</p>
-      <button onClick={() => { displayPrevMonth(date) }}>
+      <Button
+        variant="outlined"
+        color="primary"
+        onClick={() => { displayPrevMonth(date) }}
+      >
         前月表示
-      </button>
-      <button onClick={() => { displayThisMonth() }}>
+      </Button>
+      <Button
+        variant="outlined"
+        color="primary"
+        onClick={() => { displayThisMonth() }}
+      >
         当月表示
-      </button>
-      <button onClick={() => { displayNextMonth(date) }}>
+      </Button>
+      <Button
+        variant="outlined"
+        color="primary"
+        onClick={() => { displayNextMonth(date) }}
+      >
         次月表示
-      </button>
-      <table>
-        <thead>
-          <tr>
+      </Button>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow style={{ backgroundColor: "#F2F2F2" }}>
+              {
+                week.map((_day: string, _column_num: number) => {
+                  return (
+                    <TableCell key={_column_num}>
+                      {_day}
+                    </TableCell>
+                  )
+                })
+              }
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {
-              week.map(_day => {
-                return (
-                  <th>
-                    {_day}
-                  </th>
-                )
-              })
+              calendar.map((_week_row: Plan[], _row_num: number) => (
+                <TableRow key={_row_num}>
+                  {
+                    _week_row.map(_date => (
+                      <TableCell>
+                        {_date.day}
+                      </TableCell>
+                    ))
+                  }
+                </TableRow>
+              ))
             }
-          </tr>
-        </thead>
-        <tbody>
-          {
-            calendar.map((week_row: number[], row_num: number) => (
-              <tr key={row_num}>
-                {
-                  week_row.map(_date => (
-                    <td>
-                      {_date}
-                    </td>
-                  ))
-                }
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
+          </TableBody>
+        </Table>
+      </TableContainer>
     </>
   )
 }
