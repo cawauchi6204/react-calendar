@@ -2,14 +2,17 @@ import {
   useEffect,
   useState
 } from 'react'
-import Button from '@material-ui/core/Button'
-import Box from '@material-ui/core/Box'
-import Table from '@material-ui/core/Table'
-import TableContainer from '@material-ui/core/TableContainer'
-import TableHead from '@material-ui/core/TableHead'
-import TableBody from '@material-ui/core/TableBody'
-import TableRow from '@material-ui/core/TableRow'
-import TableCell from '@material-ui/core/TableCell'
+import {
+  Box,
+  Button,
+  Modal,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@material-ui/core'
 
 type Plan = {
   day: number,
@@ -22,18 +25,10 @@ type Plan = {
   ]
 }
 
-const Square = (_props: any) => {
-  const children = _props.children
-  return (
-    <Box>
-      {children}
-    </Box>
-  )
-}
-
 const Calendar = () => {
   const week = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "STU"]
   const [calendar, setCalendar] = useState<Plan[][]>([])
+  const [is_modal_open, setIsModalOpen] = useState(false)
   console.log(JSON.stringify(calendar))
   const [date, setDate] = useState(new Date())
   const year = date.getFullYear()
@@ -139,7 +134,6 @@ const Calendar = () => {
   }
   return (
     <>
-      <Square />
       <p>{year}年{month}月</p>
       <Button
         variant="outlined"
@@ -169,7 +163,7 @@ const Calendar = () => {
               {
                 week.map((_day: string, _column_num: number) => {
                   return (
-                    <TableCell key={_column_num}>
+                    <TableCell key={_column_num} style={{ border: '1px solid black' }}>
                       {_day}
                     </TableCell>
                   )
@@ -183,8 +177,16 @@ const Calendar = () => {
                 <TableRow key={_row_num}>
                   {
                     _week_row.map(_date => (
-                      <TableCell>
+                      <TableCell
+                        style={{
+                          border: '1px solid black',
+                          cursor:'pointer'
+                        }}
+                        onClick={() => { setIsModalOpen(true) }}
+                      >
                         {_date.day}
+                        <p style={{ color: _date.plans![0].plan_color }}>{_date.plans![0].plan_title}</p>
+                        <p style={{ color: _date.plans![0].plan_color }}>{_date.plans![0].plan_title}</p>
                       </TableCell>
                     ))
                   }
@@ -194,6 +196,18 @@ const Calendar = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Modal
+        open={is_modal_open}
+        onClose={() => setIsModalOpen(false)}
+        aria-labelledby="simple-modal-title"
+        aria-describedby="simple-modal-description"
+      >
+        <Box>
+          hgehogenh
+          hgoehgoe
+          ghoegen
+        </Box>
+      </Modal>
     </>
   )
 }
