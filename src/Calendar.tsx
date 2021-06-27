@@ -35,16 +35,10 @@ const Calendar = () => {
   const week = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "STU"]
   const [calendar, setCalendar] = useState<Plan[][]>([])
   const [is_modal_open, setIsModalOpen] = useState(false)
-  const [plan_description, setPlanDescription] = useState<PlanDescription>({
-    plan_id: 0,
-    plan_title: '',
-    plan_date: new Date().getDate(),
-    plan_color: ''
-  })
-  const [form_plan_title, setFormPlanTitle] = useState<string>()
-  const [form_plan_date, setFormPlanDate] = useState<number | Date>()
-  const [form_plan_color, setFormPlanColor] = useState()
-  console.log(JSON.stringify(calendar))
+  const [form_plan_title, setFormPlanTitle] = useState<string | undefined>()
+  const [form_plan_date, setFormPlanDate] = useState<number | Date | undefined>()
+  const [form_plan_color, setFormPlanColor] = useState<string | undefined>()
+  // console.log(JSON.stringify(calendar))
   const [date, setDate] = useState(new Date())
   const year = date.getFullYear()
   const month = date.getMonth() + 1
@@ -78,6 +72,29 @@ const Calendar = () => {
     setFormPlanDate(_plan.day)
     setIsModalOpen(true)
   }
+
+  const closePlanDescription = () => {
+    setFormPlanTitle(undefined)
+    setFormPlanDate(undefined)
+    setFormPlanColor(undefined)
+    setIsModalOpen(false)
+  }
+
+  const getPlanDescription = (_calendar_id: number, _calendar: Plan[][]) => {
+    // const all_array = []
+    const list = _calendar.reduce((pre, current) => {
+      pre.push(...current); return pre
+    }, [])
+    console.log(list)
+    const item = list.find(_item => {
+      _item.calendar_id === _calendar_id
+    })
+    console.log(item)
+  }
+
+  // const addPlanDescription = () => {
+
+  // }
 
   // カレンダー表示
   const showCalendar = (_date: Date) => {
@@ -165,78 +182,75 @@ const Calendar = () => {
     return calendar_array
   }
 
-  const PlanDescriptionForm = (props: any) => {
-    console.log(JSON.stringify(props.plan_description))
-    return (
-      <Box
-        style={{
-          backgroundColor: 'white',
-          width: '80%',
-          margin: '0 auto',
-          textAlign: 'center',
-          verticalAlign: 'middle',
-          padding: '5% 0'
-        }}
-      >
-        <form>
-          <TextField
-            required
-            label="タイトルと日時を追加"
-            name="plan_title"
-            onBlur={(_e: any) => {
-              setFormPlanTitle(_e.target.value)
-            }}
-            value={form_plan_title}
-          />
-          <p>日時</p>
-          <TextField
-            label="開始時刻"
-            type="time"
-            defaultValue="09:00"
-            inputProps={{
-              step: 300,
-            }}
-            onChange={(_e: any) => {
-              setFormPlanDate(_e.target.value)
-              console.log(form_plan_date)
-            }}
-            value={form_plan_date}
-          />
-          〜
-          <TextField
-            label="終了時刻"
-            type="time"
-            defaultValue="09:30"
-            inputProps={{
-              step: 300,
-            }}
-          />
-        </form>
-        <p>ラベルの色</p>
-        <input
-          type="color"
-          defaultValue={props.plan_description.plan_color}
-          onChange={(_e: any) => {
-            setFormPlanColor(_e.target.value)
-            console.log(form_plan_color)
+  const PlanDescriptionForm = () => (
+    <Box
+      style={{
+        backgroundColor: 'white',
+        width: '80%',
+        margin: '0 auto',
+        textAlign: 'center',
+        verticalAlign: 'middle',
+        padding: '5% 0'
+      }}
+    >
+      <form>
+        <TextField
+          required
+          label="タイトルと日時を追加"
+          name="plan_title"
+          onBlur={(_e: any) => {
+            setFormPlanTitle(_e.target.value)
           }}
-          value={form_plan_color}
+          value={form_plan_title}
         />
-        <br />
-        <Button
-          variant="outlined"
-          color="primary"
-          onClick={
-            (_e) => {
-              _e.preventDefault()
-              alert(form_plan_title! + form_plan_date! + form_plan_color!)
-            }}
-        >
-          登録する
-        </Button>
-      </Box>
-    )
-  }
+        <p>日時</p>
+        <TextField
+          label="開始時刻"
+          type="time"
+          defaultValue="09:00"
+          inputProps={{
+            step: 300,
+          }}
+          onChange={(_e: any) => {
+            setFormPlanDate(_e.target.value)
+          }}
+          value={form_plan_date}
+        />
+        〜
+        <TextField
+          label="終了時刻"
+          type="time"
+          defaultValue="09:30"
+          inputProps={{
+            step: 300,
+          }}
+        />
+      </form>
+      <p>ラベルの色</p>
+      <input
+        type="color"
+        onChange={(_e: any) => {
+          setFormPlanColor(_e.target.value)
+        }}
+        value={form_plan_color}
+      />
+      <br />
+      <Button
+        variant="outlined"
+        color="primary"
+        onClick={
+          (_e) => {
+            _e.preventDefault()
+            console.log(form_plan_title)
+            console.log(form_plan_date)
+            console.log(form_plan_color)
+            closePlanDescription()
+          }}
+      >
+        登録する
+      </Button>
+    </Box>
+  )
 
   return (
     <>
@@ -303,7 +317,7 @@ const Calendar = () => {
       </TableContainer>
       <Modal
         open={is_modal_open}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => closePlanDescription()}
         aria-labelledby="simple-modal-title"
         aria-describedby="simple-modal-description"
         style={{
@@ -314,7 +328,7 @@ const Calendar = () => {
           alignItems: 'center'
         }}
       >
-        <PlanDescriptionForm plan_description={plan_description!} />
+        <PlanDescriptionForm />
       </Modal>
     </>
   )
