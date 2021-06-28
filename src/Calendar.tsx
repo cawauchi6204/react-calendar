@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useState
 } from 'react'
@@ -35,15 +36,16 @@ const Calendar = () => {
   const week = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "STU"]
   const [calendar, setCalendar] = useState<Plan[][]>([])
   const [is_modal_open, setIsModalOpen] = useState(false)
+  const [form_calendar_id, setFormCalendarId] = useState<number | undefined>()
   const [form_plan_title, setFormPlanTitle] = useState<string | undefined>()
   const [form_plan_date, setFormPlanDate] = useState<number | Date | undefined>()
   const [form_plan_color, setFormPlanColor] = useState<string | undefined>()
-  // console.log(JSON.stringify(calendar))
   const [date, setDate] = useState(new Date())
   const year = date.getFullYear()
   const month = date.getMonth() + 1
+
   useEffect(() => {
-    showCalendar(date)
+    createCalendar(year, month)
   }, [date])
 
   // 前の月表示
@@ -70,6 +72,7 @@ const Calendar = () => {
 
   const openPlanDescription = (_plan: Plan) => {
     setFormPlanDate(_plan.day)
+    setFormCalendarId(_plan.calendar_id)
     setIsModalOpen(true)
   }
 
@@ -80,29 +83,64 @@ const Calendar = () => {
     setIsModalOpen(false)
   }
 
-  const getPlanDescription = (_calendar_id: number, _calendar: Plan[][]) => {
-    // const all_array = []
+  const addPlanDescription = (
+    _calendar: Plan[][],
+    _calendar_id: number,
+    _plan_title: string,
+    _plan_date: number | Date,
+    _plan_color: string
+  ) => {
+    // 二次元配列を一次元配列にならす
     const list = _calendar.reduce((pre, current) => {
-      pre.push(...current); return pre
+      pre.push(...current)
+      return pre
     }, [])
-    console.log(list)
-    const item = list.find(_item => {
-      _item.calendar_id === _calendar_id
-    })
-    console.log(item)
+    const item = list.find(_item => _item.calendar_id === _calendar_id)
+    const plan_id = (item && item.plans) ? item.plans.length + 1 : 1
+    if (item && plan_id) {
+      const plan_description: PlanDescription = {
+        plan_id,
+        plan_title: _plan_title,
+        plan_date: _plan_date,
+        plan_color: _plan_color
+      }
+      if (!item.plans) {
+        item.plans = [plan_description]
+      } else {
+        item.plans.push(plan_description)
+      }
+      setCalendar(_calendar)
+    } else {
+      throw new Error('plan_id is undefined')
+    }
   }
-
-  // const addPlanDescription = () => {
-
-  // }
 
   // カレンダー表示
-  const showCalendar = (_date: Date) => {
-    const year = _date.getFullYear()
-    const month = _date.getMonth()
-    const calendar = createCalendar(year, month)
-    setCalendar(calendar)
-  }
+  const displayCalendar = useCallback((_calendar: Plan[][]) => {
+    return (
+      _calendar.map((_week_row: Plan[], _row_num: number) => (
+        <TableRow key={_row_num}>
+          {
+            _week_row.map(_date => (
+              <TableCell
+                style={{
+                  border: '1px solid black',
+                  cursor: 'pointer'
+                }}
+                onClick={() => { openPlanDescription(_date) }}
+                key={_date.calendar_id}
+              >
+                {_date.day}
+                {_date.plans?.map((_plan, _index: number) => (
+                  <p style={{ color: _plan.plan_color }} key={_index}>{_plan.plan_title}</p>
+                ))}
+              </TableCell>
+            ))
+          }
+        </TableRow>
+      )
+      ))
+  }, [calendar])
 
   // カレンダー作成関数
   const createCalendar = (_year: number, _month: number) => {
@@ -122,18 +160,9 @@ const Calendar = () => {
         if (i === 0 && j < start_day_of_week) {
           // 1行目で1日まで先月の日付を設定
           const day = last_month_end_date - start_day_of_week + j + 1
-          const plan_id = 1
           const today_plan: Plan = {
             calendar_id,
             day,
-            plans: [
-              {
-                plan_id,
-                plan_title: 'どっかいく',
-                plan_date: date,
-                plan_color: '#6a6a'
-              }
-            ]
           }
           calendar_id++
           column_array.push(today_plan)
@@ -141,18 +170,9 @@ const Calendar = () => {
           // 最終行で最終日以降、翌月の日付を設定
           count++
           const day = count - end_date
-          const plan_id = 1
           const today_plan: Plan = {
             calendar_id,
             day,
-            plans: [
-              {
-                plan_id,
-                plan_title: 'どっかいく',
-                plan_date: date,
-                plan_color: '#6a6a'
-              }
-            ]
           }
           calendar_id++
           column_array.push(today_plan)
@@ -160,18 +180,9 @@ const Calendar = () => {
           // 当月の日付を曜日に照らし合わせて設定
           count++
           const day = count
-          const plan_id = 1
           const today_plan: Plan = {
             calendar_id,
             day,
-            plans: [
-              {
-                plan_id,
-                plan_title: 'どっかいく',
-                plan_date: date,
-                plan_color: 'black'
-              }
-            ]
           }
           calendar_id++
           column_array.push(today_plan)
@@ -179,7 +190,7 @@ const Calendar = () => {
       }
       calendar_array.push(column_array)
     }
-    return calendar_array
+    setCalendar(calendar_array)
   }
 
   const PlanDescriptionForm = () => (
@@ -205,7 +216,7 @@ const Calendar = () => {
         />
         <p>日時</p>
         <TextField
-          label="開始時刻"
+          label="時刻"
           type="time"
           defaultValue="09:00"
           inputProps={{
@@ -215,15 +226,6 @@ const Calendar = () => {
             setFormPlanDate(_e.target.value)
           }}
           value={form_plan_date}
-        />
-        〜
-        <TextField
-          label="終了時刻"
-          type="time"
-          defaultValue="09:30"
-          inputProps={{
-            step: 300,
-          }}
         />
       </form>
       <p>ラベルの色</p>
@@ -241,9 +243,15 @@ const Calendar = () => {
         onClick={
           (_e) => {
             _e.preventDefault()
-            console.log(form_plan_title)
-            console.log(form_plan_date)
-            console.log(form_plan_color)
+            if (form_calendar_id && form_plan_title && form_plan_date && form_plan_color) {
+              addPlanDescription(
+                calendar,
+                form_calendar_id,
+                form_plan_title,
+                form_plan_date,
+                form_plan_color
+              )
+            }
             closePlanDescription()
           }}
       >
@@ -292,26 +300,7 @@ const Calendar = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {
-              calendar.map((_week_row: Plan[], _row_num: number) => (
-                <TableRow key={_row_num}>
-                  {
-                    _week_row.map(_date => (
-                      <TableCell
-                        style={{
-                          border: '1px solid black',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => { openPlanDescription(_date) }}
-                      >
-                        {_date.day}
-                        <p style={{ color: _date.plans![0]!.plan_color }}>{_date.plans![0]!.plan_title}</p>
-                      </TableCell>
-                    ))
-                  }
-                </TableRow>
-              ))
-            }
+            {displayCalendar(calendar)}
           </TableBody>
         </Table>
       </TableContainer>

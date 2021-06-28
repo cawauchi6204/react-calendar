@@ -458,6 +458,7 @@ const addPlanDescription = (_calendar_id, _plan_title, _plan_date, _plan_colr) =
     plan_colr: _plan_colr
   }
   item.plans.push(plan_description)
+  console.log(array)
   // const calendar_id = item.calendar_id - 1
 }
 
