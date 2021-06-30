@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import firebase from 'firebase/app'
 import 'firebase/auth'
+import 'firebase/firestore';
+
 import { FirebaseContext } from './contexts'
+import { LinearProgress } from '@material-ui/core'
 
 export const app = firebase.initializeApp({
   apiKey: process.env.REACT_APP_FB_DEV_API_KEY,
@@ -13,28 +16,45 @@ export const app = firebase.initializeApp({
   measurementId: process.env.REACT_APP_FB_MESUREMENT_ID
 })
 
-export const loginWithEmail = async (email: string, password: string) => {
+const db = firebase.firestore()
+
+export const loginWithEmail = async (_email: string, _password: string) => {
   try {
-    await app.auth().signInWithEmailAndPassword(email, password)
-  } catch (error) {
-    alert(error)
+    await app.auth().signInWithEmailAndPassword(_email, _password)
+  } catch (_error) {
+    alert(_error)
   }
 }
 
 export const loginWithGoogle = async () => {
   const provider = new firebase.auth.GoogleAuthProvider()
   try {
-    await firebase.auth().signInWithPopup(provider)
+    await firebase.auth().signInWithPopup(provider).then((_credentials) => {
+      if (_credentials && _credentials.user) {
+        const uid = _credentials.user.uid
+        const email = _credentials.user.email
+        db.collection('users').doc(uid).set({
+          user_email: email,
+        })
+      }
+    })
   } catch (error) {
     alert(error)
   }
 }
 
-export const signupWithEmail = async (email: string, password: string) => {
+export const signupWithEmail = async (_email: string, _password: string) => {
   try {
-    await app.auth().createUserWithEmailAndPassword(email, password)
-  } catch (error) {
-    alert(error)
+    await app.auth().createUserWithEmailAndPassword(_email, _password).then((_credentials) => {
+      if (_credentials && _credentials.user) {
+        const uid = _credentials.user.uid
+        db.collection('users').doc(uid).set({
+          user_email: _email,
+        })
+      }
+    })
+  } catch (_error) {
+    alert(_error)
   }
 }
 
@@ -43,18 +63,18 @@ export const logout = () => {
 }
 
 export const FirebaseProvider: React.FC = ({ children }) => {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<firebase.User | null>(null)
   const [pending, setPending] = useState(true)
 
   useEffect(() => {
-    app.auth().onAuthStateChanged((user: any) => {
+    app.auth().onAuthStateChanged(user => {
       setUser(user)
       setPending(false)
     })
   }, [])
 
   if (pending) {
-    return <div className='loading'>ローディング中...</div>
+    return <LinearProgress />
   }
 
   return (
